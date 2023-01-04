@@ -1,0 +1,113 @@
+Create:
+CREATE TABLE branch
+( branch_name VARCHAR(15),
+branch_city VARCHAR(15),
+assets NUMBER(10,2),
+PRIMARY KEY(branch_name)
+);
+CREATE TABLE account
+( accno INTEGER(8),
+branch_name VARCHAR(15),
+balance NUMBER(10,2),
+PRIMARY KEY(accno),
+FOREIGN KEY(branch_name) REFERENCES branch(branch_name)ON DELETE
+CASCADE );
+CREATE TABLE customer
+( customer_name VARCHAR(15),
+customer_street VARCHAR(15),
+customer_city VARCHAR(15),
+PRIMARY KEY(customer_name)
+);
+CREATE TABLE loan
+( loan_number INTEGER(8),
+branc_hname VARCHAR(15),
+amount NUMBER(10,2),
+PRIMARY KEY(loan_number),
+FOREIGN KEY(branch_name) REFERENCES branch(branch_name) );
+
+ 
+CREATE TABLE depositor
+( customer_name VARCHAR(15),
+accno INTEGER,
+PRIMARY KEY(customer_name, accno),
+FOREIGN KEY(customer_name) REFERENCES customer(customer_name),
+FOREIGN KEY(accno) REFERENCES account(accno)
+);
+CREATE TABLE borrower
+( customer_name VARCHAR(15),
+loan_number INTEGER(8),
+PRIMARY KEY(customer_name, loan_number),
+FOREIGN KEY(customer_name) REFERENCES customer(customer_name),
+FOREIGN KEY(loan_number) REFERENCES loan(loan_number)
+);
+
+
+iii. Find all the customers who have at least two accounts at the Main branch.
+
+SELECT customer_name
+FROM depositor d,account a
+WHERE d.accno=a.accno
+AND a.branch_name='Main'
+GROUP BY d.customer_name
+HAVING COUNT(d.customer_name)>=2;
+ 
+Empty set (0.00 sec)
+updating can be done with the following commands.
+UPDATE account SET branch_name='Main' WHERE branch_name="b1";
+UPDATE account SET branch_name='Main' WHERE branch_name="b2";
+UPDATE account SET customer_name='cust1' WHERE customer_name="cust2";
++---------------+
+| customer_name |
++---------------+
+| cust1 |
++---------------+
+1 row in set (0.00 sec)
+iv. Find all the customers who have an account at all the branches located in a specific city.
+
+SELECT d.customer_name
+FROM account a,branch b,depositor d
+WHERE b.branch_name=a.branch_name AND
+a.accno=d.accno AND
+b.branch_city='c3'
+GROUP BY d.customer_name
+HAVING COUNT(distinct b.branch_name)=(
+SELECT COUNT(branch_name)
+FROM branch
+WHERE branch_city='c3');
++---------------+
+| customer_name |
++---------------+
+| cust3 |
++---------------+
+1 row in set (0.00 sec)
+v. Demonstrate how you delete all account tuples at every branch located in a specific city.
+
+DELETE FROM account WHERE branch_name IN(SELECT branch_name FROM branch
+WHERE branch_city='c5');
+Query OK, 1 row affected (0.04 sec)
+SELECT * FROM account;
+
++-------+-------------+---------+
+| accno | branch_name | balance |
++-------+-------------+---------+
+| 12 | b1 | 3000 |
+| 22 | b2 | 4000 |
+| 32 | b3 | 5000 |
+| 42 | b4 | 6000 |
++-------+-------------+---------+
+4 rows in set (0.00 sec)
+
+
+vi.Find the names of all depositor of a specific branch.
+
+select distinct d.customer_name
+from depositor d, account a
+where a.accno = d.accno AND
+a.branch_name = "Raj Bhavan";
+
+vii.find the details of all the loan holder of a specific branch.
+
+select distinct b.customer_name
+from borrower b, loan l
+where l.loan_number = b.loan_number
+AND l.branch_name = "KS LAyout";
